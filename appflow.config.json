@@ -1,13 +1,7 @@
 {
   "build": {
     "android": {
-      "source": "android",
-      "gradle": {
-        "file": "android/build.gradle"
-      }
+      "buildType": "debug"
     }
-  },
-  "environments": {
-    "My Environment": {}
   }
 }
