@@ -4,5 +4,8 @@
     "capacitor": {}
   },
   "type": "custom",
-  "id": "voiceforge-ai"
+  "id": "voiceforge-ai",
+  "hooks": {
+    "build:before": "echo 'Starting build...'"
+  }
 }

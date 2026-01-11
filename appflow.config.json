@@ -1,0 +1,13 @@
+{
+  "build": {
+    "android": {
+      "source": "android",
+      "gradle": {
+        "file": "android/build.gradle"
+      }
+    }
+  },
+  "environments": {
+    "My Environment": {}
+  }
+}
