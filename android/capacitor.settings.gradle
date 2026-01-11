@@ -1,0 +1,3 @@
+// Capacitor specific settings
+ext.capacitorAppId = 'com.voiceforge.ai'
+ext.capacitorAppName = 'VoiceForge AI'
