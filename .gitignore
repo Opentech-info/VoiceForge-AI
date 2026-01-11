@@ -1,0 +1,72 @@
+/* ============================================
+   .gitignore - VoiceForge AI
+   ============================================ */
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+*.apk
+*.aab
+.gradle/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+.windows
+Thumbs.db
+
+# Capacitor
+.capacitor/
+capacitor-plugin-definitions.json
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Platform-specific
+android/
+ios/
+www/
+
+# Unnecessary large binaries (not used in mobile/web runtime)
+src/public/piper/**
+src/public/models/**
+
+# Audio files (generated)
+*.wav
+*.mp3
+*.ogg
+
+# Cache
+.cache/

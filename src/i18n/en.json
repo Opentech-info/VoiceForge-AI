@@ -1,0 +1,85 @@
+{
+  "app_name": "VoiceForge AI",
+  "tagline": "Offline Voice Studio",
+  "description": "Offline Mobile AI Voice Generator for Content Creators",
+
+  "sections": {
+    "input": "📝 Your Text",
+    "voice": "🎤 Select Voice",
+    "controls": "⚙️ Voice Settings",
+    "actions": "Generate & Preview",
+    "audio": "🔊 Your Audio",
+    "history": "📋 Recent Generations",
+    "settings": "⚙️ Settings"
+  },
+
+  "labels": {
+    "speed": "Speed",
+    "pitch": "Pitch",
+    "format": "Export Format",
+    "language": "Language",
+    "theme": "Theme"
+  },
+
+  "buttons": {
+    "preview": "Preview Voice",
+    "generate": "Generate Voice",
+    "play": "▶️ Play",
+    "pause": "⏸️ Pause",
+    "download": "⬇️ Download",
+    "share": "📤 Share",
+    "delete": "Delete"
+  },
+
+  "formats": {
+    "wav": "WAV (High Quality)",
+    "mp3": "MP3 (Compressed)",
+    "ogg": "OGG (Web Optimized)",
+    "webm": "WebM (Modern)"
+  },
+
+  "voices": {
+    "sophia_pro": "Sophia",
+    "alex_narrator": "Alex",
+    "emma_gentle": "Emma",
+    "james_energetic": "James",
+    "olivia_creative": "Olivia",
+    "michael_deep": "Michael",
+    "ava_cheerful": "Ava",
+    "david_casual": "David",
+    "isabella_romantic": "Isabella",
+    "lucas_storyteller": "Lucas"
+  },
+
+  "placeholders": {
+    "text_input": "Enter the text you want to convert to speech...\n\nExample: Hello, this is VoiceForge AI speaking!"
+  },
+
+  "messages": {
+    "success": "✓ Success!",
+    "error": "✗ Error!",
+    "warning": "⚠ Warning",
+    "info": "ℹ Info",
+    "generating": "Generating audio...",
+    "previewing": "Previewing voice...",
+    "downloading": "Downloaded:",
+    "empty_text": "Please enter some text to generate voice",
+    "short_text": "Text must be at least 2 characters",
+    "long_text": "Text is too long. Maximum 2000 characters.",
+    "no_audio": "No audio to download",
+    "capture_hint": "Enable tab audio capture for clean voice downloads (Choose 'This Tab' with Audio)",
+    "fallback_audio": "Note: Using synthesized audio (browser limitation)",
+    "ready": "VoiceForge AI Ready! 🎤",
+    "initialization_error": "Failed to initialize application"
+  },
+
+  "footer": {
+    "version": "VoiceForge AI v0.1.0 • Works offline • No subscriptions needed",
+    "tagline": "Built for content creators with ❤️"
+  },
+
+  "languages": {
+    "en": "English",
+    "sw": "Swahili"
+  }
+}

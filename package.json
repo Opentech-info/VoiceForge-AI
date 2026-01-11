@@ -1,0 +1,35 @@
+{
+  "name": "voiceforge-ai",
+  "version": "0.1.0",
+  "description": "Offline mobile AI voice generator for content creators",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "http-server src -p 8000 -c-1",
+    "build": "capacitor build android",
+    "build:ios": "capacitor build ios",
+    "sync": "capacitor sync",
+    "open:android": "capacitor open android",
+    "open:ios": "capacitor open ios"
+  },
+  "keywords": [
+    "tts",
+    "text-to-speech",
+    "offline",
+    "mobile",
+    "voice",
+    "ai"
+  ],
+  "author": "VoiceForge Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@capacitor/cli": "^5.0.0",
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/android": "^5.0.0",
+    "@capacitor/ios": "^5.0.0",
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {
+    "@capacitor/core": "^5.0.0"
+  }
+}

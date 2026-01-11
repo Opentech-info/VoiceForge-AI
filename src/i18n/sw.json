@@ -1,0 +1,85 @@
+{
+  "app_name": "VoiceForge AI",
+  "tagline": "Stodio la Sauti Mtandaoni",
+  "description": "Jenerator wa Sauti wa AI kwa Wagundzi wa Maudhui",
+
+  "sections": {
+    "input": "📝 Maandishi Yako",
+    "voice": "🎤 Chagua Sauti",
+    "controls": "⚙️ Mipango ya Sauti",
+    "actions": "Jenereja na Onyesha",
+    "audio": "🔊 Sauti Yako",
+    "history": "📋 Ujenzi wa Hivi Karibuni",
+    "settings": "⚙️ Mipango"
+  },
+
+  "labels": {
+    "speed": "Kasi",
+    "pitch": "Sauti",
+    "format": "Muundo wa Kusambaza",
+    "language": "Lugha",
+    "theme": "Mandhari"
+  },
+
+  "buttons": {
+    "preview": "Onyesha Sauti",
+    "generate": "Jenereja Sauti",
+    "play": "▶️ Cheza",
+    "pause": "⏸️ Simama",
+    "download": "⬇️ Pakua",
+    "share": "📤 Sambaza",
+    "delete": "Futa"
+  },
+
+  "formats": {
+    "wav": "WAV (Ubora Wa Juu)",
+    "mp3": "MP3 (Imekompreswa)",
+    "ogg": "OGG (Iliyoboreshwa kwa Wavuti)",
+    "webm": "WebM (Sawa)"
+  },
+
+  "voices": {
+    "sophia_pro": "Sophia",
+    "alex_narrator": "Alex",
+    "emma_gentle": "Emma",
+    "james_energetic": "James",
+    "olivia_creative": "Olivia",
+    "michael_deep": "Michael",
+    "ava_cheerful": "Ava",
+    "david_casual": "David",
+    "isabella_romantic": "Isabella",
+    "lucas_storyteller": "Lucas"
+  },
+
+  "placeholders": {
+    "text_input": "Ingiza maandishi unayotaka kubadilisha kuwa sauti...\n\nMfano: Habari, hii ni VoiceForge AI inazungumza!"
+  },
+
+  "messages": {
+    "success": "✓ Imefaulu!",
+    "error": "✗ Kosa!",
+    "warning": "⚠ Onyo",
+    "info": "ℹ Habari",
+    "generating": "Inajenereja sauti...",
+    "previewing": "Inaonyesha sauti...",
+    "downloading": "Imepakuwa:",
+    "empty_text": "Tafadhali ingiza maandishi kuundwa sauti",
+    "short_text": "Maandishi lazima kuwa na angalau herufi 2",
+    "long_text": "Maandishi ni marefu sana. Wastani wa herufi 2000.",
+    "no_audio": "Hakuna sauti ya kupakua",
+    "capture_hint": "Wezesha kusambaza sauti ya kichupo kwa ajili ya sauti safi (Chagua 'Kichupo hiki' na Sauti)",
+    "fallback_audio": "Kumbuka: Kutumia sauti iliyojifanya (kikomo cha kivinjari)",
+    "ready": "VoiceForge AI Nzuri! 🎤",
+    "initialization_error": "Kushindwa kuweka programu"
+  },
+
+  "footer": {
+    "version": "VoiceForge AI v0.1.0 • Inafanya kazi mtandaoni • Hakuna usajili unaohitajika",
+    "tagline": "Imejengwa kwa wagundzi wa maudhui na ❤️"
+  },
+
+  "languages": {
+    "en": "English",
+    "sw": "Kiswahili"
+  }
+}
