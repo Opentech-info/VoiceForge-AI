@@ -90,10 +90,9 @@ cd VoiceMaster
 # Install dependencies
 npm install
 
-# Optional: Add Capacitor plugins
-npm install @capacitor/core @capacitor/cli
-npx cap add android
-npx cap add ios
+# Note: Android platform is already configured for Ionic Appflow builds
+# ONNX voice models (*.onnx files) are not tracked in git due to size
+# They are available locally in src/public/tts-web/onnx/ for development
 ```
 
 ### Development
