@@ -54,8 +54,7 @@ tmp/
 temp/
 *.tmp
 
-# Platform-specific
-android/
+# Platform-specific (keep android/ for Ionic Appflow builds)
 ios/
 www/
 

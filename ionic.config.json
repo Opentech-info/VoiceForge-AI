@@ -1,0 +1,8 @@
+{
+  "name": "VoiceForge AI",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "custom",
+  "id": "voiceforge-ai"
+}
