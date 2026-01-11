@@ -62,6 +62,8 @@ www/
 # Unnecessary large binaries (not used in mobile/web runtime)
 src/public/piper/**
 src/public/models/**
+src/public/tts-web/piper/**
+src/public/tts-web/onnx/*.onnx
 
 # Audio files (generated)
 *.wav
