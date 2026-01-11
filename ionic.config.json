@@ -3,9 +3,5 @@
   "integrations": {
     "capacitor": {}
   },
-  "type": "custom",
-  "id": "voiceforge-ai",
-  "hooks": {
-    "build:before": "echo 'Starting build...'"
-  }
+  "type": "angular"
 }
