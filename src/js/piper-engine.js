@@ -19,8 +19,8 @@ export class PiperEngine {
 
     // Configuration
     this.config = {
-      basePath: "/public/tts-web/", // HTTP server root is /src
-      wasmPath: "/public/tts-web/",
+      basePath: "/public/tts-web/",
+      wasmPath: "/public/tts-web/onnx/",
       modelsPath: "/public/tts-web/onnx/",
       workerPath: "/public/tts-web/worker/",
       preloadVoices: [
@@ -89,20 +89,22 @@ export class PiperEngine {
       // This should match your ONNX files
       const voiceList = [
         "en_US-lessac-high",
-        "en_GB-cori-high",
-        "en_US-hfc_female-medium",
+        // "en_GB-cori-high", // Missing config
+        // "en_US-hfc_female-medium", // Missing config
         "en_US-john-medium",
-        "en_US-libritts_r-medium",
-        "en_US-sam-medium",
+        "en_US-amy-medium",
+        // "en_US-libritts_r-medium", // Missing config
+        // "en_US-sam-medium", // Missing config
         "en_GB-alan-medium",
-        "en_GB-alba-medium",
-        "en_GB-aru-medium",
-        "en_GB-jenny_dioco-medium",
-        "de_DE-mls-medium",
-        "es_ES-davefx-medium",
-        "fr_FR-gilles-low",
+        // "en_GB-alba-medium", // Missing config
+        // "en_GB-aru-medium", // Missing config
+        // "en_GB-jenny_dioco-medium", // Missing config
+        "en_GB-northern_english_male-medium",
+        // "de_DE-mls-medium", // Missing config
+        // "es_ES-davefx-medium", // Missing config
+        // "fr_FR-gilles-low", // Missing config
         "sw_CD-lanfrica-medium",
-        "zh_CN-huayan-medium",
+        // "zh_CN-huayan-medium", // Missing config
       ];
 
       this.voices = voiceList.map((voiceId) => ({
@@ -181,8 +183,9 @@ export class PiperEngine {
           }
         }
 
-        // Step 5: Pre-load additional configured voices for speed
-        await this.preloadConfiguredVoices();
+        // Step 5: Optimization
+        // We do NOT preload all voices as that takes too long and blocks the UI
+        // await this.preloadConfiguredVoices();
 
         this.isInitialized = true;
         log("Piper Web TTS initialized successfully", "info");
@@ -220,24 +223,38 @@ export class PiperEngine {
     try {
       log(`Loading voice model: ${voiceId}...`, "info");
 
-      // Fetch ONNX model
-      const response = await fetch(voice.modelPath);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch model: ${response.statusText}`);
+      // Fetch ONNX model AND Config JSON
+      const modelPath = voice.modelPath; // ends in .onnx
+      const configPath = `${modelPath}.json`; // .onnx.json
+
+      const [modelResponse, configResponse] = await Promise.all([
+        fetch(modelPath),
+        fetch(configPath)
+      ]);
+
+      if (!modelResponse.ok) {
+        throw new Error(`Failed to fetch model file: ${modelPath} (${modelResponse.status})`);
+      }
+      if (!configResponse.ok) {
+         // Specialized error message for the missing JSON issue
+         log(`MISSING CONFIG: Could not find ${configPath}. Ensure .onnx.json file exists.`, "error");
+         throw new Error(`Failed to fetch config file: ${configPath} (${configResponse.status}) - JSON config is required!`);
       }
 
-      const modelData = await response.arrayBuffer();
+      const modelData = await modelResponse.arrayBuffer();
+      const configData = await configResponse.json();
+
       log(
-        `Voice model fetched: ${voiceId} (${modelData.byteLength} bytes)`,
+        `Voice model fetched: ${voiceId} (${modelData.byteLength} bytes) + Config`,
         "info"
       );
 
-      // For PiperWebEngine, we pass the model data directly
-      // The engine handles loading it into the correct format
+      // Cache the data
       this.selectedVoice = voiceId;
       this.currentModelData = {
         voiceId,
-        data: new Uint8Array(modelData),
+        modelData: new Uint8Array(modelData),
+        configData: configData
       };
 
       log(`Voice model loaded into cache: ${voiceId}`, "info");
@@ -290,7 +307,17 @@ export class PiperEngine {
         // Prefer PiperWebEngine.generate API
         if (typeof this.piper.generate === "function") {
           // Many PiperWebEngine builds expect options with voice id
-          const genOptions = { voice: voiceId, lengthScale };
+          // We pass the loaded model data directly to avoid the engine trying to fetch it
+          const genOptions = { 
+              voice: voiceId, 
+              lengthScale,
+              model: this.currentModelData ? this.currentModelData.modelData : undefined,
+              config: this.currentModelData ? this.currentModelData.configData : undefined,
+              // Some versions check for 'onnx' and 'json' properties
+              onnx: this.currentModelData ? this.currentModelData.modelData : undefined,
+              json: this.currentModelData ? JSON.stringify(this.currentModelData.configData) : undefined
+          };
+          
           const genResult = await this.piper.generate(text, genOptions);
 
           // Normalize various return shapes
@@ -306,6 +333,9 @@ export class PiperEngine {
               audio: new Float32Array(genResult.buffer),
               sampleRate: 22050,
             };
+          } else if (genResult && genResult.raw) {
+             // Another possible return shape
+             result = { audio: genResult.raw, sampleRate: genResult.sampleRate || 22050 };
           } else {
             throw new Error("Unknown Piper generate() result format");
           }

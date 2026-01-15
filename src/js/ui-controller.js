@@ -13,6 +13,7 @@ import {
   getFromStorage,
   saveToStorage,
 } from "./utils.js";
+import { ICONS } from "./icons.js";
 
 export class UIController {
   constructor() {
@@ -21,8 +22,9 @@ export class UIController {
     this.currentAudioBlob = null;
     this.currentAudioDuration = 0;
     this.isGenerating = false;
-    this.isPreviewMode = false; // Track if in preview mode
+    this.isPreviewMode = false;
     this.history = [];
+    this.previewAudioElement = new Audio(); // Dedicated preview player
 
     this.initializeElements();
     this.attachEventListeners();
@@ -59,6 +61,10 @@ export class UIController {
     this.historyList = document.getElementById("historyList");
     this.errorToast = document.getElementById("errorToast");
     this.formatSelect = document.getElementById("formatSelect");
+
+    // Initialize Icons
+    this.updateIcons();
+
     // Prefill with sample text for instant preview
     if (this.textInput) {
       this.textInput.value = SAMPLE_TEXT;
@@ -66,6 +72,31 @@ export class UIController {
     }
 
     log("UI Elements initialized", "info");
+  }
+
+  updateIcons() {
+    // Top Bar
+    if(this.themeToggle) this.themeToggle.innerHTML = ICONS.themeDark;
+    
+    // Buttons
+    if(this.previewBtn) {
+        const span = this.previewBtn.querySelector(".btn-icon");
+        if(span) span.innerHTML = ICONS.play; // Default to play
+    }
+    if(this.generateBtn) {
+        const span = this.generateBtn.querySelector(".btn-icon");
+        if(span) span.innerHTML = ICONS.generate;
+    }
+    if(this.playBtn) {
+         // Play button inside audio section
+         this.playBtn.innerHTML = `${ICONS.play} <span data-i18n="buttons.play">Play</span>`;
+    }
+    if(this.downloadBtn) {
+        this.downloadBtn.innerHTML = `${ICONS.download} <span data-i18n="buttons.download">Download</span>`;
+    }
+    if(this.shareBtn) {
+        this.shareBtn.innerHTML = `${ICONS.share} <span data-i18n="buttons.share">Share</span>`;
+    }
   }
 
   /**
@@ -82,7 +113,7 @@ export class UIController {
       this.onGenerateClick();
     });
 
-    // Preview button
+    // Preview button (NOW HANDLES PAUSE)
     this.previewBtn.addEventListener("click", () => {
       this.onPreviewClick();
     });
@@ -114,11 +145,28 @@ export class UIController {
 
     // Audio player events
     this.audioPlayer.addEventListener("play", () => {
-      this.playBtn.textContent = "⏸️ Pause";
+      this.playBtn.innerHTML = `${ICONS.pause} <span>Pause</span>`;
     });
 
     this.audioPlayer.addEventListener("pause", () => {
-      this.playBtn.textContent = "▶️ Play";
+      this.playBtn.innerHTML = `${ICONS.play} <span>Play</span>`;
+    });
+    
+    this.audioPlayer.addEventListener("ended", () => {
+      this.playBtn.innerHTML = `${ICONS.play} <span>Play</span>`;
+    });
+
+    // Preview Audio Player Events
+    this.previewAudioElement.addEventListener("ended", () => {
+        this.resetPreviewButton();
+    });
+
+    this.previewAudioElement.addEventListener("pause", () => {
+        this.resetPreviewButton();
+    });
+    
+    this.previewAudioElement.addEventListener("play", () => {
+       this.setPreviewButtonPlaying();
     });
 
     log("Event listeners attached", "info");
@@ -162,8 +210,11 @@ export class UIController {
       }`;
       card.dataset.voiceId = voice.id;
 
+      // Use SVG icon if available, else emoji fallback
+      const paramIcon = voice.type === 'Neural' ? ICONS.voice : '🗣️';
+
       card.innerHTML = `
-        <div class="voice-icon">${voice.icon}</div>
+        <div class="voice-icon">${paramIcon}</div>
         <div class="voice-name">${voice.name}</div>
         <div class="voice-type">${voice.type}</div>
       `;
@@ -182,14 +233,12 @@ export class UIController {
    * Select Voice
    */
   selectVoice(voiceId) {
-    // Update selected state in UI
     document.querySelectorAll(".voice-card").forEach((card) => {
       card.classList.remove("selected");
     });
 
-    document
-      .querySelector(`[data-voice-id="${voiceId}"]`)
-      .classList.add("selected");
+    const activeCard = document.querySelector(`[data-voice-id="${voiceId}"]`);
+    if(activeCard) activeCard.classList.add("selected");
 
     this.selectedVoiceId = voiceId;
     log(`Voice selected: ${voiceId}`, "info");
@@ -217,16 +266,16 @@ export class UIController {
     const isDarkMode = localStorage.getItem("darkMode") !== "false";
     if (isDarkMode) {
       document.body.classList.remove("light-mode");
-      this.themeToggle.textContent = "☀️";
+      this.themeToggle.innerHTML = ICONS.themeDark; 
     } else {
       document.body.classList.add("light-mode");
-      this.themeToggle.textContent = "🌙";
+      this.themeToggle.innerHTML = ICONS.themeLight;
     }
 
     this.themeToggle.addEventListener("click", () => {
       const isLightMode = document.body.classList.toggle("light-mode");
       localStorage.setItem("darkMode", !isLightMode);
-      this.themeToggle.textContent = isLightMode ? "🌙" : "☀️";
+      this.themeToggle.innerHTML = isLightMode ? ICONS.themeLight : ICONS.themeDark;
     });
   }
 
@@ -253,7 +302,6 @@ export class UIController {
     this.isGenerating = true;
 
     try {
-      // Dispatch custom event for app.js to handle
       const event = new CustomEvent("generateAudio", {
         detail: {
           text: text,
@@ -272,9 +320,29 @@ export class UIController {
   }
 
   /**
-   * Handle Preview Button Click
+   * Handle Preview Button Click (Play/Pause)
    */
   onPreviewClick() {
+    // If currently playing preview, PAUSE it
+    if (!this.previewAudioElement.paused && this.previewAudioElement.src) {
+        this.previewAudioElement.pause();
+        return;
+    }
+    
+    // If paused but has content, RESUME it
+    if(this.previewAudioElement.paused && this.previewAudioElement.src && this.previewAudioElement.currentTime > 0) {
+        this.previewAudioElement.play().catch(e => {
+             log("Resume failed, regenerating...", "warning");
+             this.startNewPreview();
+        });
+        return;
+    }
+
+    // Otherwise start NEW preview
+    this.startNewPreview();
+  }
+
+  startNewPreview() {
     const inputText = this.textInput.value.trim();
     const text = inputText || SAMPLE_TEXT;
 
@@ -293,37 +361,66 @@ export class UIController {
     window.dispatchEvent(event);
   }
 
+  setPreviewButtonPlaying() {
+      const icon = this.previewBtn.querySelector(".btn-icon");
+      const text = this.previewBtn.querySelector(".btn-text");
+      if(icon) icon.innerHTML = ICONS.pause;
+      if(text) text.textContent = "Pause"; // Or use i18n
+      this.previewBtn.classList.add("playing");
+  }
+
+  resetPreviewButton() {
+      const icon = this.previewBtn.querySelector(".btn-icon");
+      const text = this.previewBtn.querySelector(".btn-text");
+      if(icon) icon.innerHTML = ICONS.play; // Back to play icon
+      if(text) text.textContent = "Preview Voice"; // Back to original text
+      this.previewBtn.classList.remove("playing");
+      this.previewBtn.disabled = false;
+      this.previewLoader.classList.add("hidden");
+  }
+
+
   /**
    * Display Generated Audio
    */
   displayAudio(blob, duration, text, isPreview = false) {
+    if (isPreview) {
+        // Special handling for preview: play immediately in background player
+        try {
+            const url = URL.createObjectURL(blob);
+            this.previewAudioElement.src = url;
+            const playPromise = this.previewAudioElement.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    log("Preview playback failed (likely autoplay policy): " + error.message, "error");
+                    // If blocked, just show the normal player so they can click play manually
+                    this.displayAudio(blob, duration, text, false); 
+                    showToast("Preview auto-play blocked. Please click Play.", "info");
+                });
+            }
+        } catch(e) {
+            log("Error setting up preview: " + e.message, "error");
+        }
+        
+        this.hidePreviewState(); 
+        return;
+    }
+
+    // Normal Full Generation handling
     this.currentAudioBlob = blob;
     this.currentAudioDuration = duration;
-    this.isPreviewMode = isPreview; // Track if this is preview mode
+    this.isPreviewMode = false;
 
-    // Show audio section
     this.audioSection.classList.remove("hidden");
-
-    // Set audio source
     const url = URL.createObjectURL(blob);
     this.audioPlayer.src = url;
 
-    // Draw waveform
     this.drawWaveform();
-
-    // Add to history (only for full generates, not previews)
-    if (!isPreview) {
-      this.addToHistory(text, this.selectedVoiceId, duration);
-    }
-
-    // Reset button state
+    this.addToHistory(text, this.selectedVoiceId, duration);
     this.resetGenerateButton();
 
-    const mode = isPreview ? "preview" : "full generation";
-    log(
-      `Audio displayed in ${mode} mode (ready to play, no auto-play)`,
-      "info"
-    );
+    log(`Audio displayed.`, "info");
   }
 
   /**
@@ -333,15 +430,12 @@ export class UIController {
     const canvas = this.waveformCanvas;
     const ctx = canvas.getContext("2d");
 
-    // Set canvas size
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
 
-    // Clear
     ctx.fillStyle = "var(--bg-main)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw waveform
     ctx.strokeStyle = "var(--wave-active)";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -350,18 +444,16 @@ export class UIController {
     const centerY = canvas.height / 2;
 
     for (let i = 0; i < 128; i++) {
-      const x = i * barWidth;
-      const y = Math.random() * canvas.height;
-
-      if (i === 0) {
-        ctx.moveTo(x, centerY);
-      } else {
-        ctx.lineTo(x, y);
-      }
+        const x = i * barWidth;
+        const amplitude = Math.random() * (canvas.height / 3);
+        const y = centerY - (amplitude / 2);
+        
+        // Rounded bars
+        ctx.moveTo(x, centerY - amplitude);
+        ctx.lineTo(x, centerY + amplitude);
     }
 
     ctx.stroke();
-
     log("Waveform drawn", "info");
   }
 
@@ -371,20 +463,10 @@ export class UIController {
   playAudio() {
     if (this.audioPlayer.paused) {
       this.audioPlayer.play();
-      log("▶️ Playing audio", "info");
-
-      // Update button visual
-      if (this.playBtn) {
-        this.playBtn.textContent = "⏸ Stop";
-      }
+      this.playBtn.innerHTML = `${ICONS.pause} <span>Pause</span>`;
     } else {
       this.audioPlayer.pause();
-      log("⏸ Audio paused", "info");
-
-      // Update button visual
-      if (this.playBtn) {
-        this.playBtn.textContent = "▶ Play";
-      }
+      this.playBtn.innerHTML = `${ICONS.play} <span>Play</span>`;
     }
   }
 
@@ -407,11 +489,9 @@ export class UIController {
 
       let downloadBlob = this.currentAudioBlob;
 
-      // Convert format if needed
       if (format !== "wav" && this.currentAudioBlob.type === "audio/wav") {
         showToast(`Converting to ${format.toUpperCase()}...`, "info", 2000);
 
-        // Dispatch conversion event to app.js which has access to audio engine
         const conversionEvent = new CustomEvent("convertAudioFormat", {
           detail: {
             blob: this.currentAudioBlob,
@@ -431,13 +511,11 @@ export class UIController {
         downloadBlob = await conversionPromise;
       }
 
-      // Ensure blob has data
       if (!downloadBlob || downloadBlob.size === 0) {
         showToast("Audio file is empty. Please regenerate.", "error");
         return;
       }
 
-      // Create download link
       const url = URL.createObjectURL(downloadBlob);
       const link = document.createElement("a");
       link.href = url;
@@ -447,7 +525,6 @@ export class UIController {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      // Show success message
       this.downloadStatus.classList.remove("hidden");
       this.downloadMessage.textContent = `✓ Downloaded: ${filename} (${(
         downloadBlob.size / 1024
@@ -457,7 +534,7 @@ export class UIController {
         this.downloadStatus.classList.add("hidden");
       }, 3000);
 
-      log(`Audio downloaded: ${filename} (${downloadBlob.size} bytes)`, "info");
+      log(`Audio downloaded: ${filename}`, "info");
       showToast("Audio downloaded successfully!", "success");
     } catch (error) {
       log(`Error downloading audio: ${error.message}`, "error");
@@ -489,7 +566,6 @@ export class UIController {
         log("Audio shared", "info");
       } else {
         showToast("Web Share API not available on this device", "warning");
-        // Fallback: download
         this.downloadAudio();
       }
     } catch (error) {
@@ -524,7 +600,6 @@ export class UIController {
     }
 
     saveToStorage(HISTORY_STORAGE_KEY, this.history);
-
     log("Added to history", "info");
   }
 
@@ -579,8 +654,8 @@ export class UIController {
    * Hide preview loading state
    */
   hidePreviewState() {
-    this.previewBtn.disabled = false;
     this.previewLoader.classList.add("hidden");
+    // Don't enable yet if it's playing, depends on logic
   }
 
   /**

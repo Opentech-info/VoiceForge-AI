@@ -269,140 +269,27 @@ export class AudioEngine {
   /**
    * Fallback synthesis using offline buffer rendering
    */
+  /**
+   * Fallback synthesis using offline buffer rendering
+   * Note: We cannot rely on recording window.speechSynthesis because it doesn't route to AudioContext.
+   */
   async synthesizeWithFallback(text, voiceId, rate, pitch) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        log("🎙️ Recording Web Speech API TTS output...", "info");
-
-        const audioCtx = this.getAudioContext();
-        const chunks = [];
-        let recordingStarted = false;
-        let startTime = null;
-        let endTime = null;
-
-        // Create MediaStreamDestination for capturing audio
-        const destination = audioCtx.createMediaStreamDestination();
-
-        // Setup MediaRecorder
-        const mimeType = this.getBestAudioMimeType();
-        const recorder = new MediaRecorder(destination.stream, {
-          mimeType,
-          audioBitsPerSecond: 192000, // High quality
+    return new Promise((resolve, reject) => {
+      // We cannot record system audio directly in the browser without an extension.
+      // So we must inform the user or rely on the Neural Engine (Piper).
+      
+      log("Web Speech API does not support direct audio export.", "warning");
+      
+      // If we are here, it means Piper failed or wasn't used.
+      // We can still play the audio for the user to hear, but we can't give them a blob.
+      
+      this.previewVoiceSample(text, { voiceId, rate, pitch })
+        .then(() => {
+          reject(new Error("System voices cannot be exported to file. Please wait for the Neural Engine to initialize or check your connection."));
+        })
+        .catch(err => {
+          reject(new Error("Speech synthesis failed and export is not supported for system voices."));
         });
-
-        recorder.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) {
-            chunks.push(e.data);
-            log(`Recorded chunk: ${e.data.size} bytes`, "debug");
-          }
-        };
-
-        recorder.onstop = () => {
-          endTime = performance.now();
-          const actualDuration = startTime ? (endTime - startTime) / 1000 : 0;
-
-          if (chunks.length === 0) {
-            log(
-              "⚠️ No audio chunks recorded, creating synthetic backup",
-              "warning"
-            );
-            // If recording failed, return synthetic audio
-            this.createAudioBlob(text, rate, actualDuration)
-              .then((blob) => {
-                resolve({
-                  success: true,
-                  blob,
-                  duration: actualDuration || this.estimateDuration(text, rate),
-                  text,
-                  voiceId,
-                });
-              })
-              .catch(reject);
-            return;
-          }
-
-          const blob = new Blob(chunks, { type: mimeType });
-          log(
-            `✅ TTS captured: ${blob.size} bytes, ${actualDuration.toFixed(
-              2
-            )}s`,
-            "info"
-          );
-
-          resolve({
-            success: true,
-            blob,
-            duration: actualDuration,
-            text,
-            voiceId,
-          });
-
-          destination.disconnect?.();
-        };
-
-        recorder.onerror = (event) => {
-          log(`Recorder error: ${event.error}`, "error");
-          reject(new Error(`Recording failed: ${event.error}`));
-        };
-
-        // Create utterance
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = rate;
-        utterance.pitch = pitch;
-        utterance.volume = 1.0;
-
-        // Try to get a voice - if voiceId doesn't match, just use default
-        const voices = window.speechSynthesis.getVoices();
-        if (voices.length > 0) {
-          // Try to find matching voice by name/lang, or use first available
-          const voiceIndex = this.getVoiceIndex(voiceId, voices.length);
-          utterance.voice = voices[voiceIndex];
-          log(
-            `Selected voice index ${voiceIndex}: ${
-              voices[voiceIndex]?.name || "default"
-            }`,
-            "info"
-          );
-        }
-
-        utterance.onstart = () => {
-          startTime = performance.now();
-          log("TTS started, beginning clean capture", "info");
-          if (recorder && recorder.state === "inactive") {
-            recorder.start(100);
-            recordingStarted = true;
-            log("MediaRecorder started", "info");
-          }
-        };
-
-        utterance.onend = () => {
-          log("TTS ended, stopping recorder", "info");
-          if (recorder && recorder.state === "recording") {
-            recorder.stop();
-          }
-        };
-
-        utterance.onerror = (event) => {
-          log(`TTS error: ${event.error}`, "error");
-          if (recorder && recorder.state === "recording") {
-            recorder.stop();
-          }
-          reject(new Error(`Speech synthesis failed: ${event.error}`));
-        };
-
-        this.currentUtterance = utterance;
-        window.speechSynthesis.speak(utterance);
-
-        // Safety timeout - if nothing happens in 30 seconds, fail gracefully
-        setTimeout(() => {
-          if (recorder && recorder.state === "recording") {
-            log("⚠️ Recording timeout, stopping", "warning");
-            recorder.stop();
-          }
-        }, 30000);
-      } catch (err) {
-        reject(err);
-      }
     });
   }
 
