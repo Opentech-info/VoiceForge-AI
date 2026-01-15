@@ -1,0 +1,23 @@
+# Allow all bots to crawl the site
+User-agent: *
+Allow: /
+
+# Disallow crawling of specific directories (if any)
+Disallow: /.well-known/
+Disallow: /sw.js
+
+# Sitemap location
+Sitemap: https://voiceforge-ai.netlify.app/sitemap.xml
+
+# Crawl delay (polite to servers)
+Crawl-delay: 1
+
+# Additional bot-specific rules
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /

@@ -1,0 +1,23 @@
+{
+  "name": "VoiceForge AI",
+  "short_name": "VoiceForge",
+  "description": "Free offline neural text-to-speech studio with AI voices",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F1117",
+  "theme_color": "#0F1117",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "assets/voice.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities", "audio"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "prefer_related_applications": false
+}
